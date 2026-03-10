@@ -1,6 +1,7 @@
 using System.Text;
 using Api.Data;
 using Api.Models;
+using Api.Services;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -13,12 +14,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 var dbHost = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
 var dbPort = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5434";
+
 var dbName =
     Environment.GetEnvironmentVariable("POSTGRES_DB")
     ?? throw new Exception("POSTGRES_DB is missing.");
+
 var dbUser =
     Environment.GetEnvironmentVariable("POSTGRES_USER")
     ?? throw new Exception("POSTGRES_USER is missing.");
+
 var dbPassword =
     Environment.GetEnvironmentVariable("POSTGRES_PASSWORD")
     ?? throw new Exception("POSTGRES_PASSWORD is missing.");
@@ -61,6 +65,8 @@ builder
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
+builder.Services.AddScoped<JwtTokenService>();
+
 builder
     .Services.AddAuthentication(options =>
     {
@@ -76,8 +82,10 @@ builder
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
+
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
+
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         };
     });
